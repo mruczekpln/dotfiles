@@ -1,28 +1,27 @@
 #!/usr/bin/env bash
 set -e
 
-if [[ $# -ne 1 ]]; then
-  echo "Usage: $0 <mac|linux>"
-  exit 1
-fi
-
-TARGET_OS=$1
-if [[ "$TARGET_OS" != "mac" && "$TARGET_OS" != "linux" ]]; then
-  echo "Invalid OS: $TARGET_OS. Must be 'mac' or 'linux'."
-  exit 1
-fi
-
+# Define target directories
 DOTFILES_DIR=$(cd "$(dirname "$0")" && pwd)
 HOME_TARGET="$HOME"
 
-# helper
-stow_pkg () {
-  pkg=$1
-  stow --dir="$DOTFILES_DIR" --target="$HOME_TARGET" "$pkg"
+# Function to stow a package
+stow_pkg() {
+  local pkg_dir="$1"
+  echo "Stowing $pkg_dir"
+  stow --dir="$pkg_dir" --target="$HOME_TARGET" .
 }
 
-# First, stow common
-stow_pkg common
+# Stow common configurations
+for dir in "$DOTFILES_DIR/common"/*/; do
+  if [[ -d "$dir" ]]; then
+    stow_pkg "$dir"
+  fi
+done
 
-# Then stow OS-specific
-stow_pkg "$TARGET_OS"
+# Stow OS-specific configurations
+for dir in "$DOTFILES_DIR/$1"/*/; do
+  if [[ -d "$dir" ]]; then
+    stow_pkg "$dir"
+  fi
+done
